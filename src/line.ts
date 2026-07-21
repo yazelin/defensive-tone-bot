@@ -24,6 +24,7 @@ export async function replyMessage(accessToken: string, replyToken: string, text
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify({ replyToken, messages: [{ type: 'text', text }] }),
   })
+  if (!res.ok) console.error('LINE reply failed:', res.status, await res.text())
   return res.ok
 }
 

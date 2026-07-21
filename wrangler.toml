@@ -7,7 +7,7 @@ compatibility_flags = ["nodejs_compat"]
 binding = "DB"
 database_name = "defensive-tone-bot"
 # 由 `npx wrangler d1 create defensive-tone-bot` 取得後貼入:
-database_id = ""
+database_id = "c6e77f4a-8959-4919-8ec0-c55915257d58"
 
 [vars]
 LLM_BASE = "https://api.groq.com/openai/v1"

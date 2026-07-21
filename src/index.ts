@@ -22,12 +22,13 @@ app.post('/webhook', async (c) => {
 
   for (const ev of events) {
     if (ev.mode === 'standby') continue
-    await handleEvent(ev, c.env).catch(() => {}) // ponytail: 單事件失敗不炸整批
+    await handleEvent(ev, c.env).catch((e) => console.error('handleEvent err:', String(e)))
   }
   return c.json({ ok: true })
 })
 
 async function handleEvent(ev: LineEvent, env: Env): Promise<void> {
+  console.log('event:', ev.type, 'text:', ev.message?.text?.slice(0, 40), 'source:', ev.source.type)
   const chatId = chatIdOf(ev)
   const userId = userIdOf(ev)
   const replyToken = ev.replyToken
