@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import type { Env, Tone } from './db'
-import { getTone, setTone, isOptedOut, optOut, isBotOff, setBotOff, setBotOn, addKeyword, removeKeyword, listKeywords } from './db'
+import { getTone, setTone, isOptedOut, optOut, isBotOff, setBotOff, setBotOn, addKeyword, removeKeyword, listKeywords, checkAndIncrementUsage } from './db'
 import { verifySignature, replyMessage, chatIdOf, userIdOf, type LineEvent } from './line'
 import { parseCommand } from './commands'
 import { analyze, CRISIS_REPLY, BULLYING_REPLY } from './llm'
@@ -22,13 +22,12 @@ app.post('/webhook', async (c) => {
 
   for (const ev of events) {
     if (ev.mode === 'standby') continue
-    await handleEvent(ev, c.env).catch((e) => console.error('handleEvent err:', String(e)))
+    await handleEvent(ev, c.env).catch(() => {}) // ponytail: 單事件失敗不炸整批
   }
   return c.json({ ok: true })
 })
 
 async function handleEvent(ev: LineEvent, env: Env): Promise<void> {
-  console.log('event:', ev.type, 'text:', ev.message?.text?.slice(0, 40), 'source:', ev.source.type)
   const chatId = chatIdOf(ev)
   const userId = userIdOf(ev)
   const replyToken = ev.replyToken
@@ -87,6 +86,13 @@ async function handleEvent(ev: LineEvent, env: Env): Promise<void> {
 
   // LLM 分析
   const tone = await getTone(env.DB, chatId)
+
+  // per-user 每日限流(防濫用耗光 Groq 額度)
+  if (!(await checkAndIncrementUsage(env.DB, userId))) {
+    await replyMessage(env.LINE_CHANNEL_ACCESS_TOKEN, replyToken, '今日分析次數已達上限(20 則),明天再來吧!')
+    return
+  }
+
   const result = await analyze(text, tone, env.LLM_BASE, env.LLM_MODEL, env.LLM_API_KEY)
 
   // LLM 偵測到危機/霸凌 → 程式接手

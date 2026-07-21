@@ -26,3 +26,11 @@ CREATE TABLE IF NOT EXISTS keywords (
   pattern    TEXT NOT NULL,
   created_at INTEGER NOT NULL
 );
+
+-- per-user 每日分析次數限制(防濫用耗光 LLM 額度)
+CREATE TABLE IF NOT EXISTS usage_daily (
+  user_id    TEXT NOT NULL,
+  date       TEXT NOT NULL,        -- YYYY-MM-DD
+  count      INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, date)
+);

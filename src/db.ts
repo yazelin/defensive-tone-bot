@@ -60,3 +60,16 @@ export async function listKeywords(db: D1Database, chatId: string): Promise<stri
   const { results } = await db.prepare('SELECT pattern FROM keywords WHERE chat_id = ? ORDER BY id').bind(chatId).all<{ pattern: string }>()
   return results.map((r) => r.pattern)
 }
+
+// ---- per-user 每日限流 ----
+export const DAILY_LIMIT = 20 // 每人每天最多 20 次 LLM 分析
+
+export async function checkAndIncrementUsage(db: D1Database, userId: string): Promise<boolean> {
+  const today = new Date().toISOString().slice(0, 10)
+  const row = await db.prepare('SELECT count FROM usage_daily WHERE user_id = ? AND date = ?').bind(userId, today).first<{ count: number }>()
+  if (row && row.count >= DAILY_LIMIT) return false // 超額 → 拒絕
+  await db.prepare(
+    'INSERT INTO usage_daily (user_id, date, count) VALUES (?, ?, 1) ON CONFLICT(user_id, date) DO UPDATE SET count = count + 1',
+  ).bind(userId, today).run()
+  return true
+}

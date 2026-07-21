@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { env } from 'cloudflare:test'
-import { getTone, setTone, isOptedOut, optOut, isBotOff, setBotOff, setBotOn, addKeyword, removeKeyword, listKeywords } from '../src/db'
+import { getTone, setTone, isOptedOut, optOut, isBotOff, setBotOff, setBotOn, addKeyword, removeKeyword, listKeywords, checkAndIncrementUsage, DAILY_LIMIT } from '../src/db'
 
 beforeEach(async () => {
-  for (const t of ['chat_tones', 'optouts', 'bot_off', 'keywords']) await env.DB.exec(`DELETE FROM ${t}`)
+  for (const t of ['chat_tones', 'optouts', 'bot_off', 'keywords', 'usage_daily']) await env.DB.exec(`DELETE FROM ${t}`)
 })
 
 describe('chat_tones', () => {
@@ -72,5 +72,27 @@ describe('keywords', () => {
     await removeKeyword(env.DB, 'C1', '隨便啦')
     expect(await listKeywords(env.DB, 'C1')).toEqual([])
     expect(await listKeywords(env.DB, 'C2')).toEqual(['隨便啦'])
+  })
+})
+
+describe('usage_daily', () => {
+  it('allows up to DAILY_LIMIT', async () => {
+    for (let i = 0; i < DAILY_LIMIT; i++) {
+      expect(await checkAndIncrementUsage(env.DB, 'U1')).toBe(true)
+    }
+    expect(await checkAndIncrementUsage(env.DB, 'U1')).toBe(false)
+  })
+  it('per-user isolation', async () => {
+    for (let i = 0; i < DAILY_LIMIT; i++) await checkAndIncrementUsage(env.DB, 'U1')
+    expect(await checkAndIncrementUsage(env.DB, 'U1')).toBe(false)
+    expect(await checkAndIncrementUsage(env.DB, 'U2')).toBe(true)
+  })
+  it('counts increment correctly', async () => {
+    await checkAndIncrementUsage(env.DB, 'U1')
+    await checkAndIncrementUsage(env.DB, 'U1')
+    await checkAndIncrementUsage(env.DB, 'U1')
+    const today = new Date().toISOString().slice(0, 10)
+    const row = await env.DB.prepare('SELECT count FROM usage_daily WHERE user_id = ? AND date = ?').bind('U1', today).first<{ count: number }>()
+    expect(row?.count).toBe(3)
   })
 })

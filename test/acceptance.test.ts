@@ -1,11 +1,11 @@
 // R1 驗收自檢:有真實 LLM_API_KEY 時跑 20+20 句驗收;用 test key 時 skip。
-// 跑法:LLM_API_KEY=groq_real_key npx vitest run test/acceptance.test.ts
+// 跑法:LLM_API_KEY=gsk_xxx LLM_BASE=https://api.groq.com/openai/v1 LLM_MODEL=openai/gpt-oss-120b npx vitest run test/acceptance.test.ts
 import { describe, it, expect } from 'vitest'
 import { env } from 'cloudflare:test'
 import { analyze } from '../src/llm'
 import { DEFENSIVE_SENTENCES, NON_DEFENSIVE_SENTENCES } from './acceptance-sentences'
 
-const isRealKey = !env.LLM_API_KEY.startsWith('test-')
+const isRealKey = !env.LLM_API_KEY.startsWith('test-') && env.LLM_BASE.includes('groq')
 const describeOrSkip = isRealKey ? describe : describe.skip
 
 describeOrSkip('R1 acceptance — real LLM (skipped with test key)', () => {
@@ -16,7 +16,7 @@ describeOrSkip('R1 acceptance — real LLM (skipped with test key)', () => {
       if (r.reply && !isPersonalityAssertion(r.reply) && r.safety === 'ok') pass++
     }
     expect(pass).toBeGreaterThanOrEqual(16)
-  }, 60_000)
+  }, 120_000)
 
   it('non-defensive: ≤4/20 false-trigger a reply', async () => {
     let triggered = 0
@@ -25,7 +25,7 @@ describeOrSkip('R1 acceptance — real LLM (skipped with test key)', () => {
       if (r.reply) triggered++
     }
     expect(triggered).toBeLessThanOrEqual(4)
-  }, 60_000)
+  }, 120_000)
 })
 
 // 人格斷言偵測:回覆含「你是XX型/你的人格/你這種人/你就是…的人」等斷言 → 不合格

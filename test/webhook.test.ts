@@ -6,7 +6,7 @@ const S = env.LINE_CHANNEL_SECRET
 const T = env.LINE_CHANNEL_ACCESS_TOKEN
 
 beforeEach(() => {
-  for (const t of ['chat_tones', 'optouts', 'bot_off', 'keywords']) env.DB.exec(`DELETE FROM ${t}`)
+  for (const t of ['chat_tones', 'optouts', 'bot_off', 'keywords', 'usage_daily']) env.DB.exec(`DELETE FROM ${t}`)
   fetchMock.activate()
   fetchMock.disableNetConnect()
   // 預設 mock LINE reply API
