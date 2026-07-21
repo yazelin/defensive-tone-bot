@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>防衛語句翻譯機 — LINE Bot</title>
+  <meta name="description" content="偵測聊天中的防衛性語句,翻譯成底層需求,以友善/幽默/正式三語氣回覆。LINE Bot @233ofgmj">
+  <meta property="og:title" content="防衛語句翻譯機 — LINE Bot">
+  <meta property="og:description" content="把聊天中的防衛語句翻譯成底層需求,讓溝通不卡在防衛上。">
+  <meta property="og:type" content="website">
+  <style>
+    :root { --bg: #0d1117; --card: #161b22; --border: #30363d; --text: #e6edf3; --muted: #8b949e; --accent: #06d6a0; --line: #06c755; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { max-width: 560px; width: 100%; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 40px 32px; text-align: center; }
+    .shield { font-size: 48px; margin-bottom: 16px; }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    .subtitle { color: var(--muted); font-size: 15px; line-height: 1.6; margin-bottom: 28px; }
+    .subtitle .ex { display: block; margin-top: 8px; color: var(--accent); font-size: 14px; }
+    .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 600; text-decoration: none; margin-bottom: 10px; transition: opacity .2s; }
+    .btn:hover { opacity: .85; }
+    .btn-line { background: var(--line); color: #fff; }
+    .btn-line img { width: 24px; height: 24px; border-radius: 4px; }
+    .links { display: flex; gap: 16px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
+    .links a { color: var(--muted); text-decoration: none; font-size: 14px; transition: color .2s; }
+    .links a:hover { color: var(--accent); }
+    .footer { margin-top: 20px; color: var(--muted); font-size: 12px; text-align: center; }
+    .features { margin: 28px 0; text-align: left; }
+    .features li { list-style: none; padding: 6px 0; color: var(--muted); font-size: 14px; }
+    .features li::before { content: "✓"; color: var(--accent); margin-right: 8px; }
+    .bot-id { background: var(--bg); border: 1px dashed var(--border); border-radius: 8px; padding: 8px 16px; display: inline-block; font-family: monospace; font-size: 18px; color: var(--accent); margin: 12px 0; user-select: all; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="shield">🛡️</div>
+      <h1>防衛語句翻譯機</h1>
+      <p class="subtitle">
+        把聊天中的防衛性語句翻譯成底層需求,讓溝通不卡在防衛上。
+        <span class="ex">「關你什麼事」→ 或許你想保護自己的隱私?</span>
+      </p>
+
+      <a href="https://line.me/R/ti/p/@233ofgmj" class="btn btn-line" target="_blank" rel="noopener">
+        <img src="https://scdn.line-apps.net/linebot/img/btn/base.png" alt="LINE">
+        加好友 @233ofgmj
+      </a>
+
+      <div class="bot-id" onclick="navigator.clipboard.writeText('@233ofgmj')">ID: @233ofgmj · 點我複製</div>
+
+      <ul class="features">
+        <li>偵測防衛性語句,翻譯成底層需求</li>
+        <li>友善 / 幽默 / 正式 三語氣切換</li>
+        <li>群組 @mention 觸發,一對一自動分析</li>
+        <li>危機轉介 1925、霸凌防護、低信心沉默</li>
+        <li>對話零落庫,只存設定</li>
+      </ul>
+
+      <div class="links">
+        <a href="https://github.com/yazelin/defensive-tone-bot" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://facebook.com/yaze.lin.gm" target="_blank" rel="noopener">Facebook</a>
+        <a href="https://yazelin.github.io" target="_blank" rel="noopener">Blog</a>
+        <a href="https://buymeacoffee.com/yazelin" target="_blank" rel="noopener">☕ 請喝咖啡</a>
+      </div>
+    </div>
+    <p class="footer">願望池 #35 實作 · MIT License · by @yazelin</p>
+  </div>
+</body>
+</html>
