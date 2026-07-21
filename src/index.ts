@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import type { Env, Tone } from './db'
+import type { Env } from './db'
 import { getTone, setTone, isOptedOut, optOut, isBotOff, setBotOff, setBotOn, addKeyword, removeKeyword, listKeywords, checkAndIncrementUsage } from './db'
 import { verifySignature, replyMessage, chatIdOf, userIdOf, type LineEvent } from './line'
 import { parseCommand } from './commands'
@@ -22,7 +22,8 @@ app.post('/webhook', async (c) => {
 
   for (const ev of events) {
     if (ev.mode === 'standby') continue
-    await handleEvent(ev, c.env).catch(() => {}) // ponytail: 單事件失敗不炸整批
+    // ponytail: waitUntil lets us return 200 immediately; LLM runs in background
+    c.executionCtx.waitUntil(handleEvent(ev, c.env).catch(() => {}))
   }
   return c.json({ ok: true })
 })
@@ -33,13 +34,12 @@ async function handleEvent(ev: LineEvent, env: Env): Promise<void> {
   const replyToken = ev.replyToken
   if (!replyToken) return
 
-  // bot 被加入群組/好友 → 發告知訊息
   if (ev.type === 'join' || ev.type === 'follow') {
     await replyMessage(env.LINE_CHANNEL_ACCESS_TOKEN, replyToken, [
       '🛡️ 防衛語句翻譯機上線!',
       '我會把聊天中的防衛性語句翻譯成底層需求,用你選的語氣回覆。',
       '',
-      '群組:@我 或回覆我才會觸發。',
+      '群組:@我才會觸發。',
       '一對一:每則訊息都會分析。',
       '',
       '/tone friendly|humor|formal — 切換語氣',
@@ -51,34 +51,22 @@ async function handleEvent(ev: LineEvent, env: Env): Promise<void> {
 
   if (ev.type === 'leave' || ev.type === 'unfollow') return
 
-  // 只處理文字訊息
   if (ev.type !== 'message' || ev.message?.type !== 'text') return
   const text = ev.message.text ?? ''
   if (!text.trim()) return
 
   const isGroup = ev.source.type === 'group' || ev.source.type === 'room'
 
-  // 指令永遠生效
   const cmd = parseCommand(text)
   if (cmd) {
     await handleCommand(cmd, env, chatId, userId, replyToken)
     return
   }
 
-  // 群組:bot 停用 → skip
   if (isGroup && await isBotOff(env.DB, chatId)) return
-
-  // optout:發話者在名單 → skip(含被他人引用時也不分析該人)
   if (await isOptedOut(env.DB, chatId, userId)) return
+  if (isGroup && !isGroupTrigger(ev)) return
 
-  // 群組:需顯式觸發(@mention isSelf 或 @機器人文字)
-  if (isGroup && !isGroupTrigger(ev)) {
-    console.log('[GROUP-NO-TRIGGER]', JSON.stringify({ text, source: ev.source, mention: (ev.message as any)?.mention }))
-    return
-  }
-  console.log('[GROUP-TRIGGER]', JSON.stringify({ text, mention: (ev.message as any)?.mention }))
-
-  // 安全預檢(程式側最終把關,不信 LLM)
   if (hasCrisisSignal(text)) {
     await replyMessage(env.LINE_CHANNEL_ACCESS_TOKEN, replyToken, CRISIS_REPLY)
     return
@@ -88,10 +76,8 @@ async function handleEvent(ev: LineEvent, env: Env): Promise<void> {
     return
   }
 
-  // LLM 分析
   const tone = await getTone(env.DB, chatId)
 
-  // per-user 每日限流(防濫用耗光 Groq 額度)
   if (!(await checkAndIncrementUsage(env.DB, userId))) {
     await replyMessage(env.LINE_CHANNEL_ACCESS_TOKEN, replyToken, '今日分析次數已達上限(20 則),明天再來吧!')
     return
@@ -99,7 +85,6 @@ async function handleEvent(ev: LineEvent, env: Env): Promise<void> {
 
   const result = await analyze(text, tone, env.LLM_BASE, env.LLM_MODEL, env.LLM_API_KEY)
 
-  // LLM 偵測到危機/霸凌 → 程式接手
   if (result.safety === 'crisis') {
     await replyMessage(env.LINE_CHANNEL_ACCESS_TOKEN, replyToken, CRISIS_REPLY)
     return
@@ -112,12 +97,9 @@ async function handleEvent(ev: LineEvent, env: Env): Promise<void> {
   if (result.reply) {
     await replyMessage(env.LINE_CHANNEL_ACCESS_TOKEN, replyToken, result.reply)
   }
-  // 非防衛或低信心 → 沉默(不回覆)
 }
 
 function isGroupTrigger(ev: LineEvent): boolean {
-  // LINE mention feature: message.mention.mentionees[].isSelf
-  // 只有透過 LINE 原生 @mention（點選成員列表）才觸發
   const mention = (ev.message as any)?.mention
   if (mention?.mentionees?.some((m: any) => m.isSelf)) return true
   return false

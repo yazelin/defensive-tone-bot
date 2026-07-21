@@ -67,15 +67,17 @@ export async function analyze(
     }),
   })
   if (!res.ok) {
-    // ponytail: LLM 失敗 = 沉默,不炸 webhook(不讓使用者看到錯誤)
     return { is_defensive: false, confidence: 'low', underlying_need: '', reply: null, safety: 'ok' }
   }
   const data = await res.json() as any
   let content = data?.choices?.[0]?.message?.content ?? ''
   // glm-5.2 是 reasoning model,有時 content 空、輸出在 reasoning_content
   if (!content) content = data?.choices?.[0]?.message?.reasoning_content ?? ''
-  // strip markdown code fences (```json ... ```)
-  content = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/,'').trim()
+  // DEBUG: log raw content for diagnosis
+  console.log('[LLM-RAW]', JSON.stringify({ hasContent: !!data?.choices?.[0]?.message?.content, contentLen: content.length, contentPreview: content.slice(0,200) }))
+  // strip markdown code fences — 處理 ```json ... ``` 或 ``` ... ```
+  const fenceMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/)
+  if (fenceMatch) content = fenceMatch[1].trim()
   try {
     const parsed = JSON.parse(content) as AnalysisResult
     return normalize(parsed, tone)
