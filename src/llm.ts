@@ -59,7 +59,7 @@ export async function analyze(
     body: JSON.stringify({
       model: llmModel,
       temperature: 0.4,
-      max_tokens: 800,
+      max_tokens: 2000,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: `語氣:${TONE_GUIDE[tone]}\n\n輸入句子:${text}` },
@@ -71,7 +71,11 @@ export async function analyze(
     return { is_defensive: false, confidence: 'low', underlying_need: '', reply: null, safety: 'ok' }
   }
   const data = await res.json() as any
-  const content = data?.choices?.[0]?.message?.content ?? ''
+  let content = data?.choices?.[0]?.message?.content ?? ''
+  // glm-5.2 是 reasoning model,有時 content 空、輸出在 reasoning_content
+  if (!content) content = data?.choices?.[0]?.message?.reasoning_content ?? ''
+  // strip markdown code fences (```json ... ```)
+  content = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/,'').trim()
   try {
     const parsed = JSON.parse(content) as AnalysisResult
     return normalize(parsed, tone)

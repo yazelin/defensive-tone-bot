@@ -72,7 +72,11 @@ async function handleEvent(ev: LineEvent, env: Env): Promise<void> {
   if (await isOptedOut(env.DB, chatId, userId)) return
 
   // 群組:需顯式觸發(@mention isSelf 或 @機器人文字)
-  if (isGroup && !isGroupTrigger(ev)) return
+  if (isGroup && !isGroupTrigger(ev)) {
+    console.log('[GROUP-NO-TRIGGER]', JSON.stringify({ text, source: ev.source, mention: (ev.message as any)?.mention }))
+    return
+  }
+  console.log('[GROUP-TRIGGER]', JSON.stringify({ text, mention: (ev.message as any)?.mention }))
 
   // 安全預檢(程式側最終把關,不信 LLM)
   if (hasCrisisSignal(text)) {
