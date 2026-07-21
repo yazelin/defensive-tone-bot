@@ -59,7 +59,7 @@ export async function analyze(
     body: JSON.stringify({
       model: llmModel,
       temperature: 0.4,
-      max_tokens: 2000,
+      max_tokens: 4096,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: `語氣:${TONE_GUIDE[tone]}\n\n輸入句子:${text}` },
