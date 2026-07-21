@@ -112,12 +112,10 @@ async function handleEvent(ev: LineEvent, env: Env): Promise<void> {
 }
 
 function isGroupTrigger(ev: LineEvent): boolean {
-  // LINE mention feature:message.mention.mentionees[].isSelf
+  // LINE mention feature: message.mention.mentionees[].isSelf
+  // 只有透過 LINE 原生 @mention（點選成員列表）才觸發
   const mention = (ev.message as any)?.mention
   if (mention?.mentionees?.some((m: any) => m.isSelf)) return true
-  // fallback:文字含 @ + bot 名稱前綴(無 mention 結構時)
-  const text = ev.message?.text ?? ''
-  if (/^@\S+/u.test(text.trim())) return true
   return false
 }
 
