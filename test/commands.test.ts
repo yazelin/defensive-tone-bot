@@ -7,6 +7,18 @@ describe('parseCommand', () => {
     expect(parseCommand('')).toBeNull()
   })
 
+  describe('bare-word help triggers (no slash required)', () => {
+    it.each(['help', 'Help', '說明', '教學', '怎麼用', '指令', '功能'])('%s triggers /help', (word) => {
+      const r = parseCommand(word)
+      expect(r).not.toBeNull()
+      expect(r!.action).toEqual({ kind: 'help' })
+      expect(r!.reply).toContain('/tone')
+    })
+    it('does not fire on sentences that merely contain the word', () => {
+      expect(parseCommand('可以幫我一下嗎,說明一下這個功能好嗎')).toBeNull()
+    })
+  })
+
   describe('/tone', () => {
     it('no arg shows current', () => {
       const r = parseCommand('/tone')

@@ -35,17 +35,9 @@ async function handleEvent(ev: LineEvent, env: Env): Promise<void> {
   if (!replyToken) return
 
   if (ev.type === 'join' || ev.type === 'follow') {
-    await replyMessage(env.LINE_CHANNEL_ACCESS_TOKEN, replyToken, [
-      '🛡️ 防衛語句翻譯機上線!',
-      '我會把聊天中的防衛性語句翻譯成底層需求,用你選的語氣回覆。',
-      '',
-      '群組:@我才會觸發。',
-      '一對一:每則訊息都會分析。',
-      '',
-      '/tone friendly|humor|formal — 切換語氣',
-      '/optout — 退出分析  /botoff — 停用機器人',
-      '/help — 完整說明',
-    ].join('\n'))
+    // ponytail: 重用 /help 的完整說明,避免跟這裡手寫的縮寫版各自漂移、指令對不齊
+    const help = parseCommand('/help')!.reply
+    await replyMessage(env.LINE_CHANNEL_ACCESS_TOKEN, replyToken, `防衛語句翻譯機上線!\n\n${help}`)
     return
   }
 

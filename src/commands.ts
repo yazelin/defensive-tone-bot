@@ -14,9 +14,15 @@ export type HelpAction = { kind: 'help' }
 
 const TONES: Record<string, Tone> = { friendly: 'friendly', humor: 'humor', formal: 'formal' }
 
+// ponytail: 一般人不會自己想到打 /help,這幾個口語詞也當成求助入口
+const HELP_WORDS = new Set(['help', '說明', '教學', '怎麼用', '指令', '功能'])
+
 export function parseCommand(text: string): CommandResult | null {
   const t = text.trim()
-  if (!t.startsWith('/')) return null
+  if (!t.startsWith('/')) {
+    if (HELP_WORDS.has(t.toLowerCase())) return parseCommand('/help')
+    return null
+  }
   const [cmd, ...rest] = t.split(/\s+/)
   const arg = rest.join(' ').trim()
 
@@ -48,7 +54,7 @@ export function parseCommand(text: string): CommandResult | null {
     case '/start':
       return {
         reply: [
-          '🛡️ 防衛語句翻譯機',
+          '防衛語句翻譯機',
           '我會把聊天中的防衛性語句翻譯成底層需求,用你選的語氣回覆。',
           '',
           '指令:',

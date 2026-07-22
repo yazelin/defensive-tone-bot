@@ -90,6 +90,13 @@
     }
     .features li:last-child { border-bottom: none; }
     .features li::before { content: "\1F33F"; margin-right: 10px; font-size: 12px; }
+    .commands { margin: 20px 0; text-align: left; background: var(--sage-50); border-radius: 16px; padding: 16px 18px; }
+    .commands h2 { font-size: 13px; color: var(--sage-deep); margin-bottom: 10px; font-weight: 700; }
+    .commands dl { margin: 0; }
+    .commands div { padding: 6px 0; border-bottom: 1px solid var(--sage-200); }
+    .commands div:last-child { border-bottom: none; }
+    .commands dt { font-family: monospace; font-size: 13px; color: var(--sage-deep); }
+    .commands dd { margin: 2px 0 0; font-size: 12px; color: var(--ink-light); }
     .links { display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
     .links a {
       color: var(--ink-light); text-decoration: none; font-size: 13px;
@@ -130,6 +137,17 @@
         <li>危機轉介 1925、霸凌防護、低信心沉默</li>
         <li>對話零落庫,只存設定</li>
       </ul>
+
+      <div class="commands">
+        <h2>指令(記得帶斜線)</h2>
+        <dl>
+          <div><dt>/tone friendly|humor|formal</dt><dd>切換語氣</dd></div>
+          <div><dt>/keyword add|remove|list</dt><dd>管理關鍵字</dd></div>
+          <div><dt>/optout /optin</dt><dd>退出/重新加入分析</dd></div>
+          <div><dt>/botoff /boton</dt><dd>停用/啟用機器人(群組用)</dd></div>
+          <div><dt>/help</dt><dd>顯示完整說明</dd></div>
+        </dl>
+      </div>
 
       <div class="links">
         <a href="https://github.com/yazelin/defensive-tone-bot" target="_blank" rel="noopener">GitHub</a>
